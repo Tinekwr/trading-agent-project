@@ -54,8 +54,19 @@ Rules:
 
     content = response.choices[0].message.content
 
+    content = response.choices[0].message.content
+
+    if content is None:
+        return {
+            "month": month,
+            "summary": "Empty response from DeepSeek.",
+            "sentiment_score": 0.0,
+            "risk_score": 0.5
+        }
+
     try:
         return json.loads(content)
+
     except json.JSONDecodeError:
         return {
             "month": month,
