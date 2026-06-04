@@ -2,7 +2,7 @@ import os
 import matplotlib.pyplot as plt
 
 # 统一定义绝对路径
-RESULTS_DIR = "/data/wanghl/xieyanbing/trading_agent_project(1)/trading_agent_project/results"
+RESULTS_DIR = os.path.join(os.path.dirname(__file__), "results")
 
 def plot_equity_curves(df):
     os.makedirs(RESULTS_DIR, exist_ok=True)

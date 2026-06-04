@@ -3,8 +3,7 @@ from pathlib import Path
 
 
 def load_data(symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
-    target_dir = "/data/wanghl/xieyanbing/trading_agent_project(1)/trading_agent_project/data"
-    file_path = Path(target_dir) / f"{symbol}.csv"
+    file_path = Path("data") / f"{symbol}.csv"
 
     if not file_path.exists():
         raise FileNotFoundError(f"Cannot find file: {file_path}")

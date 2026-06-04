@@ -1,3 +1,4 @@
+import os
 from data_loader import load_data
 from agents.technical_agent import add_technical_indicators, technical_agent
 from sentiment_loader import add_monthly_sentiment
@@ -5,6 +6,8 @@ from experiments import run_strategy_experiments
 from metrics import calculate_metrics
 from visualization import plot_equity_curves, plot_drawdown_curves
 import pandas as pd
+
+_BASE = os.path.dirname(__file__)
 
 
 def main():
@@ -24,7 +27,7 @@ def main():
 
     df = add_monthly_sentiment(
         df,
-        "/data/wanghl/xieyanbing/trading_agent_project(1)/trading_agent_project/data/monthly_sentiment.csv"
+        os.path.join(_BASE, "data", "monthly_sentiment.csv")
     )
 
     df = run_strategy_experiments(df)
@@ -46,14 +49,15 @@ def main():
 
     print(metrics_df)
 
+    os.makedirs(os.path.join(_BASE, "results"), exist_ok=True)
     metrics_df.to_csv(
-        "/data/wanghl/xieyanbing/trading_agent_project(1)/trading_agent_project/results/metrics.csv"
+        os.path.join(_BASE, "results", "metrics.csv")
     )
 
     print()
     print("Metrics saved to results/metrics.csv")
     df.to_csv(
-        "/data/wanghl/xieyanbing/trading_agent_project(1)/trading_agent_project/results/backtest_results.csv"
+        os.path.join(_BASE, "results", "backtest_results.csv")
     )
 
     print()
