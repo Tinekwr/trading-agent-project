@@ -86,11 +86,11 @@ def main():
 
     df = pd.DataFrame(results)
     
-  
-
-
-    target_dir = "trading_agent_project/data"
-
+    # ================= 核心修改部分 =================
+    import os
+    # 设置绝对路径
+    target_dir = "/data/wanghl/xieyanbing/trading_agent_project(1)/trading_agent_project/data"
+    # 确保文件夹存在，如果不存在会自动创建
     os.makedirs(target_dir, exist_ok=True)
     
     output_path = os.path.join(target_dir, "monthly_sentiment.csv")
