@@ -86,7 +86,7 @@ def main():
 
     df = pd.DataFrame(results)
     
-    # ================= 核心修改部分 =================
+   
     import os
     # 设置绝对路径
     target_dir = "/data/wanghl/xieyanbing/trading_agent_project(1)/trading_agent_project/data"
