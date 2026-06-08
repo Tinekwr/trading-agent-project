@@ -43,7 +43,7 @@ def main():
             "Buy and Hold",
             "Technical Only",
             "Technical + Sentiment",
-            "Full Multi-Agent"
+            "Long-Biased Multi-Agent"
         ]
     )
 

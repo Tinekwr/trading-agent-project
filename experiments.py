@@ -32,35 +32,32 @@ def run_strategy_experiments(df: pd.DataFrame) -> pd.DataFrame:
         * df["daily_return"]
     )
 
-    # 4. Full Multi-Agent
+    # 4. Long-Biased Multi-Agent
     positions = []
     equity = 1.0
     prev_position = 0
-    equity_history = []  # 新增：记录资金历史，用来算“滚动高点”
+    equity_history = []
 
     for i in range(len(df)):
         row = df.iloc[i]
 
-        # 1. 先用【昨天】的仓位，计算【今天】的收益并更新资金曲线
+        # Use yesterday's position to calculate today's realizable return.
         strategy_return = prev_position * row["daily_return"]
         equity = equity * (1 + strategy_return)
-        equity_history.append(equity)  # 把每天的净值存入历史记录
+        equity_history.append(equity)
 
-        # ================= 核心修复：滚动风控机制 =================
-        # 计算“近 60 个交易日”的滚动最高点，而不是死板的历史最高点
+        # Calculate rolling drawdown from the recent 60-day equity peak.
         rolling_window = 60
         recent_peak = max(equity_history[-rolling_window:])
         current_drawdown = (equity - recent_peak) / recent_peak if recent_peak > 0 else 0
-        # ==========================================================
 
-        # 2. 然后再根据【今天】的收盘数据，计算出【明天】该用的仓位
+        # Use today's close-based signals to decide tomorrow's position.
         raw_position = decision_agent(
             technical_signal=row["technical_signal"],
             sentiment_score=row["sentiment_score"],
             risk_score=row["risk_score"]
         )
-        
-        # 宏观熔断机制：双重确认
+
         if row["risk_score"] > 0.8 and row["technical_signal"] == -1:
             final_position = 0
         else:
@@ -78,7 +75,6 @@ def run_strategy_experiments(df: pd.DataFrame) -> pd.DataFrame:
         * df["daily_return"]
     )
 
-    # Equity curves
     df["buy_hold_curve"] = (1 + df["buy_hold_return"]).cumprod()
     df["technical_curve"] = (1 + df["technical_return"]).cumprod()
     df["tech_sent_curve"] = (1 + df["tech_sent_return"]).cumprod()

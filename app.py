@@ -10,6 +10,9 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import numpy as np
 
+
+BASE_DIR = os.path.dirname(__file__)
+
 # ── 页面配置 ────
 st.set_page_config(
     page_title="多 Agent 量化交易系统",
@@ -23,18 +26,23 @@ st.caption("AAPL · 2020-01-01 ~ 2024-12-31 | 技术 Agent + 情感 Agent + 风�
 # ── 加载数据 ─────────────────────────────────────────────
 @st.cache_data
 def load_backtest():
-    df = pd.read_csv("results/backtest_results.csv", parse_dates=["Date"])
+    df = pd.read_csv(
+        os.path.join(BASE_DIR, "results", "backtest_results.csv"),
+        parse_dates=["Date"]
+    )
     df.set_index("Date", inplace=True)
     return df
 
 @st.cache_data
 def load_metrics():
-    df = pd.read_csv("results/metrics.csv", index_col=0)
+    df = pd.read_csv(os.path.join(BASE_DIR, "results", "metrics.csv"), index_col=0)
+    df.index = df.index.astype(str).str.strip()
+    df.rename(index={"Full Multi-Agent": "Long-Biased Multi-Agent"}, inplace=True)
     return df
 
 @st.cache_data
 def load_sentiment():
-    df = pd.read_csv("data/monthly_sentiment.csv")
+    df = pd.read_csv(os.path.join(BASE_DIR, "data", "monthly_sentiment.csv"))
     df["month"] = pd.to_datetime(df["month"])
     return df
 
@@ -56,8 +64,8 @@ df_view = df.loc[str(start_date):str(end_date)].copy()
 
 show_strategies = st.sidebar.multiselect(
     "显示策略",
-    options=["买入并持有", "纯技术策略", "技术+情感", "完整多Agent"],
-    default=["买入并持有", "纯技术策略", "技术+情感", "完整多Agent"],
+    options=["买入并持有", "纯技术策略", "技术+情感", "长期持有偏向多Agent"],
+    default=["买入并持有", "纯技术策略", "技术+情感", "长期持有偏向多Agent"],
 )
 
 st.sidebar.markdown("---")
@@ -65,8 +73,8 @@ st.sidebar.markdown("**Agent 说明**")
 st.sidebar.markdown(
     "- **技术 Agent**：MA20/60 + RSI + MACD 三信号投票\n"
     "- **情感 Agent**：DeepSeek LLM 月度情感评分\n"
-    "- **风险 Agent**：risk_score≥0.75 一票否决 + 最大回撤10%熔断\n"
-    "- **决策 Agent**：多数投票合并最终持仓"
+    "- **风险 Agent**：risk_score≥0.75 一票否决 + 最大回撤25%极端保护\n"
+    "- **决策 Agent**：长期持有为主，技术转空且情绪负面时退出"
 )
 
 # ── 指标卡片 ─────────────────────────────────────────────
@@ -76,19 +84,19 @@ col_map = {
     "买入并持有": "Buy and Hold",
     "纯技术策略": "Technical Only",
     "技术+情感":  "Technical + Sentiment",
-    "完整多Agent": "Full Multi-Agent",
+    "长期持有偏向多Agent": "Long-Biased Multi-Agent",
 }
 color_map = {
     "买入并持有":  "#636EFA",
     "纯技术策略":  "#EF553B",
     "技术+情感":   "#00CC96",
-    "完整多Agent": "#FF6692",
+    "长期持有偏向多Agent": "#FF6692",
 }
 curve_col = {
     "买入并持有":  "buy_hold_curve",
     "纯技术策略":  "technical_curve",
     "技术+情感":   "tech_sent_curve",
-    "完整多Agent": "multi_agent_curve",
+    "长期持有偏向多Agent": "multi_agent_curve",
 }
 
 cols = st.columns(4)
@@ -98,9 +106,13 @@ metric_labels = {
     "Sharpe Ratio":      "夏普比率",
     "Max Drawdown":      "最大回撤",
 }
-highlight_row = "Full Multi-Agent"
+highlight_row = "Long-Biased Multi-Agent"
 for i, (cn, en) in enumerate(col_map.items()):
     with cols[i]:
+        if en not in metrics_df.index:
+            st.error(f"Missing metrics row: {en}")
+            st.caption(", ".join(metrics_df.index.astype(str)))
+            continue
         row = metrics_df.loc[en]
         cr  = f"{row['Cumulative Return']*100:.2f}%"
         sr  = f"{row['Sharpe Ratio']:.3f}"
@@ -203,7 +215,7 @@ with tab2:
     pos_counts = {
         "纯技术策略":  df_view["technical_position"].value_counts().to_dict(),
         "技术+情感":   df_view["tech_sent_position"].value_counts().to_dict(),
-        "完整多Agent": df_view["multi_agent_position"].value_counts().to_dict(),
+        "长期持有偏向多Agent": df_view["multi_agent_position"].value_counts().to_dict(),
     }
     bar_data = []
     for strat, counts in pos_counts.items():

@@ -4,40 +4,21 @@ def decision_agent(
     risk_score: float
 ) -> int:
     """
-    Multi-agent voting decision.
+    Long-biased multi-agent risk-filter decision.
 
     Return:
     1 = buy / hold stock
     0 = stay in cash
     """
 
-    # Risk Agent veto: high risk means no trading
+    # Risk Agent veto: high risk means no trading.
     if risk_score >= 0.75:
         return 0
 
-    votes = 0
-
-    # Technical Analyst vote
-    if technical_signal == 1:
-        votes += 1
-    elif technical_signal == -1:
-        votes -= 1
-
-    # Sentiment Analyst vote
-    if sentiment_score >= 0.3:
-        votes += 1
-    elif sentiment_score <= -0.3:
-        votes -= 1
-
-    # Risk Analyst vote
-    if risk_score <= 0.35:
-        votes += 1
-    elif risk_score >= 0.6:
-        votes -= 1
-
-    if votes >= 1:
-        return 1
-    else:
+    # For a long-term stock like AAPL, use sentiment as a confirmation filter:
+    # stay invested by default and exit only when price trend and monthly
+    # sentiment both turn negative.
+    if technical_signal == -1 and sentiment_score <= -0.3:
         return 0
-    
-#risk_score >= 0.75，直接空仓，风控一票否决。
+
+    return 1

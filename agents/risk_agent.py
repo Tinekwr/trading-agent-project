@@ -1,7 +1,7 @@
 def risk_agent(
     raw_position: int,
     current_drawdown: float,
-    max_drawdown_limit: float = -0.10
+    max_drawdown_limit: float = -0.25
 ) -> int:
     """
     Return:
