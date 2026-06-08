@@ -1,7 +1,7 @@
 import os
 from data_loader import load_data
 from agents.technical_agent import add_technical_indicators, technical_agent
-from sentiment_loader import add_monthly_sentiment
+from sentiment_loader import add_weekly_sentiment
 from experiments import run_strategy_experiments
 from metrics import calculate_metrics
 from visualization import plot_equity_curves, plot_drawdown_curves
@@ -25,9 +25,9 @@ def main():
         axis=1
     )
 
-    df = add_monthly_sentiment(
+    df = add_weekly_sentiment(
         df,
-        os.path.join(_BASE, "data", "monthly_sentiment.csv")
+        os.path.join(_BASE, "data", "weekly_sentiment.csv")
     )
 
     df = run_strategy_experiments(df)
@@ -78,3 +78,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    print("Launching Streamlit Dashboard...")
+
+    os.system("streamlit run app.py")

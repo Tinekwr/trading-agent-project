@@ -42,8 +42,9 @@ def load_metrics():
 
 @st.cache_data
 def load_sentiment():
-    df = pd.read_csv(os.path.join(BASE_DIR, "data", "monthly_sentiment.csv"))
-    df["month"] = pd.to_datetime(df["month"])
+    df = pd.read_csv(os.path.join(BASE_DIR, "data", "weekly_sentiment.csv"))
+    df["week_start"] = pd.to_datetime(df["week_start"])
+    df["week_end"] = pd.to_datetime(df["week_end"])
     return df
 
 df = load_backtest()
@@ -236,7 +237,7 @@ with tab2:
 st.markdown("---")
 
 # ── 情感数据 ─────────────────────────────────────────────
-st.subheader("🧠 DeepSeek 情感 Agent · 月度评分")
+st.subheader("🧠 DeepSeek 情感 Agent · 周度评分")
 
 fig_sent = make_subplots(
     rows=2, cols=1,
@@ -247,12 +248,12 @@ fig_sent = make_subplots(
 )
 colors_sent = ["#E74C3C" if v < 0 else "#2ECC71" for v in sentiment_df["sentiment_score"]]
 fig_sent.add_trace(
-    go.Bar(x=sentiment_df["month"], y=sentiment_df["sentiment_score"],
+    go.Bar(x=sentiment_df["week_start"], y=sentiment_df["sentiment_score"],
            marker_color=colors_sent, name="情感评分"),
     row=1, col=1,
 )
 fig_sent.add_trace(
-    go.Scatter(x=sentiment_df["month"], y=sentiment_df["risk_score"],
+    go.Scatter(x=sentiment_df["week_start"], y=sentiment_df["risk_score"],
                fill="tozeroy", line=dict(color="#E67E22", width=2),
                name="风险评分"),
     row=2, col=1,
@@ -265,13 +266,25 @@ fig_sent.update_layout(height=420, hovermode="x unified",
 st.plotly_chart(fig_sent, use_container_width=True)
 
 # ── 情感表格 ─────────────────────────────────────────────
-with st.expander("📋 查看月度情感详情"):
+with st.expander("📋 查看周度情感详情"):
     display_df = sentiment_df.copy()
-    display_df["month"] = display_df["month"].dt.strftime("%Y-%m")
-    display_df.columns = ["月份", "事件摘要", "情感评分", "风险评分"]
-    st.dataframe(display_df, use_container_width=True, height=300)
 
-st.markdown("---")
+    display_df["week_start"] = display_df["week_start"].dt.strftime("%Y-%m-%d")
+    display_df["week_end"] = display_df["week_end"].dt.strftime("%Y-%m-%d")
+
+    show_cols = ["week_start", "week_end", "sentiment_score", "risk_score"]
+
+    if "summary" in display_df.columns:
+        show_cols.insert(2, "summary")
+
+    display_df = display_df[show_cols]
+
+    if "summary" in display_df.columns:
+        display_df.columns = ["周开始", "周结束", "事件摘要", "情感评分", "风险评分"]
+    else:
+        display_df.columns = ["周开始", "周结束", "情感评分", "风险评分"]
+
+    st.dataframe(display_df, use_container_width=True, height=300)
 
 # ── 指标汇总表 ────────────────────────────────────────────
 st.subheader("📋 绩效指标汇总")
@@ -284,4 +297,4 @@ fmt_df.columns = ["累计收益率", "年化收益率", "年化波动率", "夏�
 st.dataframe(fmt_df, use_container_width=True)
 
 st.markdown("---")
-st.caption("数据来源：NASDAQ · AAPL日线 | 情感数据：DeepSeek API 批量生成")
+st.caption("数据来源：NASDAQ · AAPL日线 | 情感数据：DeepSeek API 周批量生成")
