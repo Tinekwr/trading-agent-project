@@ -9,6 +9,6 @@ __pycache__/
 .vscode/
 .idea/
 
-results/
+results/.DS_Store
 
 course_paper.md

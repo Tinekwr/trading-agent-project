@@ -54,8 +54,19 @@ Rules:
 
     content = response.choices[0].message.content
 
+    content = response.choices[0].message.content
+
+    if content is None:
+        return {
+            "month": month,
+            "summary": "Empty response from DeepSeek.",
+            "sentiment_score": 0.0,
+            "risk_score": 0.5
+        }
+
     try:
         return json.loads(content)
+
     except json.JSONDecodeError:
         return {
             "month": month,
@@ -86,17 +97,16 @@ def main():
 
     df = pd.DataFrame(results)
     
-    # ================= 核心修改部分 =================
+   
     import os
     # 设置绝对路径
-    target_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+    target_dir = "/data/wanghl/xieyanbing/trading_agent_project(1)/trading_agent_project/data"
     # 确保文件夹存在，如果不存在会自动创建
     os.makedirs(target_dir, exist_ok=True)
     
-    # 拼接成完整的文件路径
     output_path = os.path.join(target_dir, "monthly_sentiment.csv")
     df.to_csv(output_path, index=False)
-    # ===============================================
+
 
     print(f"Saved to {output_path}")
     print(df.head())
